@@ -1,0 +1,118 @@
+@baseUrl = http://localhost:5000/api
+@contentType = application/json
+
+#########################################
+# PHASE 1: SETUP (REGISTRATION)
+#########################################
+
+### 1. Register a Regular User
+# @name registerUser
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+    "username": "bob_user",
+    "email": "bob@example.com",
+    "password": "password123",
+    "role": "user"
+}
+
+### 2. Register an Admin
+# @name registerAdmin
+POST {{baseUrl}}/auth/register
+Content-Type: {{contentType}}
+
+{
+    "username": "alice_admin",
+    "email": "alice@example.com",
+    "password": "adminpassword",
+    "role": "admin"
+}
+
+#########################################
+# PHASE 2: LOGIN & DYNAMIC ASSIGNMENT
+#########################################
+
+### 3. Login as Admin
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "alice@example.com",
+    "password": "adminpassword"
+}
+
+### Assign Admin Variables
+@adminToken = {{adminLogin.response.body.token}}
+###
+@adminId = {{adminLogin.response.body._id}}
+
+### 4. Login as Regular User
+# @name userLogin
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "bob@example.com",
+    "password": "password123"
+}
+
+### Assign User Variables
+@userToken = {{userLogin.response.body.token}}
+###
+@bobId = {{userLogin.response.body._id}}
+
+#########################################
+# PHASE 3: RBAC & SECURITY TESTS
+#########################################
+
+### 5. SUCCESS TEST: Admin promoting Bob
+PUT {{baseUrl}}/admin/promote/{{bobId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+### 6. FAILURE TEST: Regular User trying to block Admin (Should be 403)
+PUT {{baseUrl}}/admin/block/{{adminId}}
+Authorization: Bearer {{userToken}}
+Content-Type: {{contentType}}
+
+#########################################
+# PHASE 4: BLOCKING & RECOVERY
+#########################################
+
+### 7. Admin blocks Bob
+PUT {{baseUrl}}/admin/block/{{bobId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+### 8. VERIFY: Blocked Bob tries to login (Should be 403)
+POST {{baseUrl}}/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "bob@example.com",
+    "password": "password123"
+}
+
+### 9. Admin unblocks Bob
+PUT {{baseUrl}}/admin/unblock/{{bobId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+### 10. Admin demotes Bob back to user
+PUT {{baseUrl}}/admin/demote/{{bobId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: {{contentType}}
+
+#########################################
+# PHASE 5: AUDIT LOGS
+#########################################
+
+### 11. SUCCESS TEST: Admin views Audit Logs
+GET {{baseUrl}}/admin/logs
+Authorization: Bearer {{adminToken}}
+
+### 12. FAILURE TEST: User tries to view Audit Logs (Should be 403)
+GET {{baseUrl}}/admin/logs
+Authorization: Bearer {{userToken}}
