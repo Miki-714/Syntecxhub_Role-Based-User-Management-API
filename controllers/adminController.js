@@ -21,7 +21,6 @@ exports.promoteUser = async (req, res) => {
   res.json({ message: "User promoted" });
 };
 
-// Unblock a user
 exports.unblockUser = async (req, res) => {
   await User.findByIdAndUpdate(req.params.id, { isBlocked: false });
   await AuditLog.create({
@@ -32,7 +31,6 @@ exports.unblockUser = async (req, res) => {
   res.json({ message: "User unblocked successfully" });
 };
 
-// Demote an admin back to a regular user
 exports.demoteUser = async (req, res) => {
   await User.findByIdAndUpdate(req.params.id, { role: "user" });
   await AuditLog.create({
@@ -46,7 +44,6 @@ exports.demoteUser = async (req, res) => {
 // Get all audit logs
 exports.getAuditLogs = async (req, res) => {
   try {
-    // .populate() lets us see the actual names instead of just IDs
     const logs = await AuditLog.find()
       .populate("adminId", "username email")
       .populate("targetId", "username")

@@ -14,9 +14,9 @@ router.use(protect);
 router.use(authorize("admin"));
 
 router.put("/block/:id", blockUser);
-router.put("/unblock/:id", unblockUser); // NEW
+router.put("/unblock/:id", unblockUser);
 router.put("/promote/:id", promoteUser);
-router.put("/demote/:id", demoteUser); // NEW
+router.put("/demote/:id", demoteUser);
 router.get("/logs", protect, authorize("admin"), getAuditLogs);
 
 module.exports = router;

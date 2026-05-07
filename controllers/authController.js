@@ -23,13 +23,11 @@ exports.login = async (req, res) => {
 
     // 1. Check if user exists and password is correct
     if (user && (await bcrypt.compare(password, user.password))) {
-      // 2. NEW: Check if the user is blocked before giving them a token
+      // 2. Check if the user is blocked before giving them a token
       if (user.isBlocked) {
-        return res
-          .status(403)
-          .json({
-            message: "Your account has been blocked. Please contact support.",
-          });
+        return res.status(403).json({
+          message: "Your account has been blocked. Please contact support.",
+        });
       }
 
       res.json({
